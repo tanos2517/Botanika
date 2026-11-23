@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Botanika AI Pro</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0a2a1d">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#0a2a1d;--bg2:#04140d;--card:rgba(20,70,48,.45);--line:rgba(120,220,160,.25);--tx:#eafff1;--mut:#9fcdb2;--ac1:#b5f0c8;--ac2:#5fa77c;--ink:#06210f}
+[data-theme=light]{--bg1:#e9f8ee;--bg2:#cfeedb;--card:rgba(255,255,255,.65);--line:rgba(30,110,60,.25);--tx:#0b2a17;--mut:#3d6b50;--ac1:#7fd4a0;--ac2:#3f9a65;--ink:#05200f}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Inter,system-ui,sans-serif;color:var(--tx);background:radial-gradient(1200px 600px at 80% -10%,var(--bg1),var(--bg2))fixed}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px max(16px,calc((100% - 980px)/2));border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:12px;font-weight:700}
+.ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg,var(--ac1),var(--ac2));font-size:20px}
+.hr{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+button,select,input,textarea{font:inherit;color:var(--tx)}
+input[type=text]{ime-mode:auto}.enc-input{min-width:0;flex:1}.enc-input:focus{border-color:var(--ac1);box-shadow:0 0 0 3px rgba(181,240,200,.18)}
+.pill,.btn,select{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;font-weight:600;transition:.2s}
+.pill:hover,.btn:hover{transform:translateY(-1px);border-color:var(--ac1)}
+.pill.on,.btn.pri{background:linear-gradient(135deg,var(--ac1),var(--ac2));color:var(--ink);border-color:transparent;box-shadow:0 6px 20px rgba(95,167,124,.35)}
+.btn{border-radius:12px;padding:12px 22px}
+.sq{width:38px;height:38px;border-radius:10px;padding:0;background:linear-gradient(135deg,var(--ac1),var(--ac2));border:0;cursor:pointer;font-size:18px}
+main{max-width:980px;margin:0 auto;padding:28px 16px 60px}
+nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px}
+nav .pill{font-size:13px;padding:8px 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px;backdrop-filter:blur(10px);margin-bottom:18px}
+.drop{text-align:center;padding:48px 20px}
+.drop.drag{border-color:var(--ac1);box-shadow:0 0 0 3px rgba(181,240,200,.3)}
+h1,h2{font-family:'Playfair Display',serif;margin:.4em 0}
+h1{font-size:clamp(26px,5vw,36px)}
+.mut{color:var(--mut)}
+.row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+input[type=text],textarea{width:100%;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.mini{background:rgba(0,0,0,.15);border:1px solid var(--line);border-radius:16px;padding:14px}
+.mini img{width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:8px}
+.res{display:grid;grid-template-columns:260px 1fr;gap:22px}
+@media(max-width:700px){.res{grid-template-columns:1fr}}
+.res img{width:100%;border-radius:16px;object-fit:cover}
+.bar{height:8px;background:rgba(255,255,255,.12);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ac2),var(--ac1))}
+table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.chat{max-height:420px;overflow:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.msg{padding:10px 14px;border-radius:14px;max-width:85%;white-space:pre-wrap}.msg.u{align-self:flex-end;background:linear-gradient(135deg,var(--ac1),var(--ac2));color:var(--ink)}.msg.a{background:rgba(0,0,0,.2)}
+.spin{width:34px;height:34px;border:4px solid var(--line);border-top-color:var(--ac1);border-radius:50%;animation:s 1s linear infinite;margin:20px auto}@keyframes s{to{transform:rotate(360deg)}}
+.err{background:rgba(255,90,90,.15);border:1px solid rgba(255,120,120,.5);border-radius:12px;padding:12px;margin-top:14px}
+dialog{background:var(--bg2);color:var(--tx);border:1px solid var(--line);border-radius:20px;padding:24px;max-width:460px;width:92%}dialog::backdrop{background:rgba(0,0,0,.6)}
+body.reduce-motion *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+tag{display:inline-block;background:rgba(181,240,200,.15);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;margin:2px}
+.setting{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}.setting:last-of-type{border-bottom:0}.setting label{font-weight:600}.setting input[type=range]{max-width:180px}.seg{display:flex;gap:6px}.seg button{width:auto!important;padding:8px 12px!important;border:1px solid var(--line)}.seg button.on{background:linear-gradient(135deg,var(--ac1),var(--ac2));color:var(--ink)}.switch{position:relative;width:44px;height:24px}.switch input{position:absolute;inset:0;width:44px;height:24px;margin:0;opacity:0;z-index:2;cursor:pointer}.switch i{position:absolute;inset:0;border-radius:999px;background:rgba(120,120,120,.35);border:1px solid var(--line);pointer-events:none}.switch i:after{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.2s}.switch input:checked+i{background:var(--ac2)}.switch input:checked+i:after{transform:translateX(20px)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="ic">🌿</div><span>Botanika AI Pro</span><span id="profileBadge" class="mut"></span></div>
+  <div class="hr">
+    <button class="pill on" onclick="go('analyze')">🔍 Анализ</button>
+    <button class="pill" id="hbtn" onclick="go('history')">📋 История (0)</button>
+    <select id="lang" onchange="S.lang=this.value;save()">
+      <option value="ru">Русский</option><option value="en">English</option><option value="uz">O'zbek</option>
+      <option value="az">Azərbaycan</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="es">Español</option><option value="pt">Português</option><option value="ar">العربية</option><option value="tr">Türkçe</option><option value="uk">Українська</option><option value="kk">Қазақ тілі</option><option value="ky">Кыргызча</option><option value="tg">Тоҷикӣ</option><option value="fa">فارسی</option><option value="hi">हिन्दी</option><option value="bn">বাংলা</option><option value="zh">中文</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="it">Italiano</option><option value="nl">Nederlands</option><option value="pl">Polski</option><option value="cs">Čeština</option><option value="sk">Slovenčina</option><option value="sv">Svenska</option><option value="no">Norsk</option><option value="da">Dansk</option><option value="fi">Suomi</option><option value="el">Ελληνικά</option><option value="he">עברית</option><option value="id">Bahasa Indonesia</option><option value="ms">Bahasa Melayu</option><option value="th">ไทย</option><option value="vi">Tiếng Việt</option><option value="ro">Română</option>
+    </select>
+    <button class="sq" title="Настройки" onclick="dlg.showModal()">⚙️</button>
+    <button class="sq" title="Тема" onclick="S.theme=S.theme=='dark'?'light':'dark';save()">☀️</button>
+  </div>
+</header>
+<main>
+  <nav id="tabs"></nav>
+  <div id="view"></div>
+</main>
+<input type="file" id="file" accept="image/*" multiple hidden>
+<input type="file" id="cam" accept="image/*" capture="environment" multiple hidden>
+<dialog id="dlg">
+  <h2>Настройки</h2>
+  <div class="setting"><label>Тема</label><div class="seg"><button id="themeDark" onclick="setTheme('dark')">Ночная</button><button id="themeLight" onclick="setTheme('light')">Светлая</button></div></div>
+  <div class="setting"><label for="brightness">Яркость</label><input id="brightness" type="range" min="80" max="120" value="100" oninput="setBrightness(this.value)"></div>
+  <div class="setting"><label for="textSize">Размер текста</label><select id="textSize" onchange="setTextSize(this.value)"><option value="small">Меньше</option><option value="normal">Обычный</option><option value="large">Крупнее</option></select></div>
+  <div class="setting"><label for="reducedMotion">Сократить анимацию</label><label class="switch"><input id="reducedMotion" type="checkbox" onchange="setReducedMotion(this.checked)"><i></i></label></div>
+  <div class="setting"><label for="profileName">Имя профиля</label><input id="profileName" type="text" maxlength="40" placeholder="Ваше имя" oninput="setProfileName(this.value)" style="max-width:180px"></div>
+  <div class="setting"><label for="wateringNotifications">Уведомления о поливе</label><label class="switch"><input id="wateringNotifications" type="checkbox" onchange="setNotifications(this.checked)"><i></i></label></div>
+  <p class="mut">Напоминания приходят, пока сайт открыт, и требуют разрешения браузера.</p>
+  <div class="setting"><label for="compressImages">Сжимать фотографии</label><label class="switch"><input id="compressImages" type="checkbox" onchange="setCompression(this.checked)"><i></i></label></div>
+  <div class="setting"><label for="recognitionDiagnostics">Диагностика распознавания</label><label class="switch"><input id="recognitionDiagnostics" type="checkbox" onchange="setDiagnostics(this.checked)"><i></i></label></div>
+  <div class="row"><button class="btn" onclick="runDiagnostics()">Проверить функции</button></div>
+  <div class="row"><button class="btn pri" onclick="dlg.close()">Готово</button></div>
+</dialog>
+<script>
+const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LS=(k,d)=>{try{return JSON.parse(localStorage[k])??d}catch{return d}};
+let S=LS('bot_s',{lang:'ru',theme:'dark',brightness:100,textSize:'normal',reducedMotion:false,profileName:'',wateringNotifications:false,compressImages:true,recognitionDiagnostics:false}), H=LS('bot_h',[]), G=LS('bot_g',[]), tab='analyze', chat=[], pending=[];
+const TABS=[['analyze','🔬 Анализ'],['history','📚 История'],['green','🌱 Оранжерея'],['cal','📅 Календарь'],['disease','🩺 Болезни'],['enc','🌿 Энциклопедия'],['cmp','⚖️ Сравнение'],['exp','🧪 Эксперт']];
+function applySettings(){document.documentElement.dataset.theme=S.theme||'dark';document.documentElement.lang=S.lang||'ru';document.documentElement.style.filter=`brightness(${S.brightness||100}%)`;document.documentElement.style.fontSize=S.textSize=='large'?'106%':S.textSize=='small'?'94%':'100%';document.body.classList.toggle('reduce-motion',!!S.reducedMotion);if($('#lang'))$('#lang').value=S.lang||'ru';if($('#brightness'))$('#brightness').value=S.brightness||100;if($('#textSize'))$('#textSize').value=S.textSize||'normal';if($('#reducedMotion'))$('#reducedMotion').checked=!!S.reducedMotion;if($('#profileName'))$('#profileName').value=S.profileName||'';if($('#profileBadge'))$('#profileBadge').textContent=S.profileName?' · '+S.profileName:'';if($('#wateringNotifications'))$('#wateringNotifications').checked=!!S.wateringNotifications;if($('#compressImages'))$('#compressImages').checked=S.compressImages!==false;if($('#recognitionDiagnostics'))$('#recognitionDiagnostics').checked=!!S.recognitionDiagnostics;if($('#themeDark')){$('#themeDark').classList.toggle('on',S.theme=='dark');$('#themeLight').classList.toggle('on',S.theme!='dark')}}
+function setTheme(v){S.theme=v;save();applySettings()}
+function setBrightness(v){S.brightness=+v;save();applySettings()}
+function setTextSize(v){S.textSize=v;save();applySettings()}
+function setReducedMotion(v){S.reducedMotion=v;save();applySettings()}
+function setProfileName(v){S.profileName=v.trim().slice(0,40);save()}
+async function setNotifications(enabled){S.wateringNotifications=enabled;save();applySettings();if(enabled){if(!('Notification' in window)){alert('Этот браузер не поддерживает уведомления.');S.wateringNotifications=false;save();applySettings();return}try{const permission=await Notification.requestPermission();if(permission!=='granted')throw new Error('Разрешите уведомления в настройках браузера.')}catch(e){S.wateringNotifications=false;save();applySettings();alert(e.message||'Не удалось включить уведомления.')}}}
+function setCompression(enabled){S.compressImages=enabled;save();applySettings()}
+function setDiagnostics(enabled){S.recognitionDiagnostics=enabled;save();applySettings()}
+let DB=null;
+function openDB(){
+  if(!('indexedDB' in window))return Promise.resolve(null);
+  if(DB)return Promise.resolve(DB);
+  return new Promise((resolve,reject)=>{
+    const r=indexedDB.open('botanika-ai-db',1);
+    r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains('history'))db.createObjectStore('history',{keyPath:'id'});if(!db.objectStoreNames.contains('greenhouse'))db.createObjectStore('greenhouse',{keyPath:'id'})};
+    r.onsuccess=()=>{DB=r.result;resolve(DB)};
+    r.onerror=()=>reject(r.error)
+  })
+}
+async function syncDB(){
+  try{
+    const db=await openDB();if(!db)return;
+    const tx=db.transaction(['history','greenhouse'],'readwrite');
+    const hs=tx.objectStore('history'),gs=tx.objectStore('greenhouse');
+    hs.clear();gs.clear();
+    H.forEach(r=>hs.put(r));G.forEach(g=>gs.put(g));
+  }catch{}
+}
+async function loadDB(){
+  try{
+    const db=await openDB();if(!db)return;
+    const tx=db.transaction(['history','greenhouse'],'readonly');
+    const history=await new Promise((resolve,reject)=>{const r=tx.objectStore('history').getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)});
+    const greenhouse=await new Promise((resolve,reject)=>{const r=tx.objectStore('greenhouse').getAll();r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error)});
+    if(history.length)H=history.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+    if(greenhouse.length)G=greenhouse;
+  }catch{}
+}
+function save(){localStorage.bot_s=JSON.stringify(S);localStorage.bot_h=JSON.stringify(H);localStorage.bot_g=JSON.stringify(G);syncDB();applySettings();if($('#hbtn'))$('#hbtn').textContent=`📋 История (${H.length})`}
+function go(t){tab=t;$('#tabs').innerHTML=TABS.map(([k,n])=>`<button class="pill ${k==t?'on':''}" onclick="go('${k}')">${n}</button>`).join('');R[t]();save()}
+const LN={ru:'русском',en:'English',uz:"o'zbek tilida",az:'azərbaycan dilində',de:'Deutsch',fr:'français',es:'español',pt:'português',ar:'арабском языке',tr:'Türkçe',uk:'українською',kk:'қазақ тілінде',ky:'кыргыз тилинде',tg:'тоҷикӣ забон',fa:'فارسی',hi:'हिन्दी',bn:'বাংলা',zh:'中文',ja:'日本語',ko:'한국어',it:'italiano',nl:'Nederlands',pl:'polski',cs:'čeština',sk:'slovenčina',sv:'svenska',no:'norsk',da:'dansk',fi:'suomi',el:'ελληνικά',he:'עברית',id:'Bahasa Indonesia',ms:'Bahasa Melayu',th:'ไทย',vi:'Tiếng Việt',ro:'română'};
+const ENC_TEXT={ru:['Энциклопедия','Поиск растениями','Найти'],en:['Plant Encyclopedia','Search plants','Search'],uz:['O\'simliklar ensiklopediyasi','O\'simlikni qidiring','Qidirish'],az:['Bitki ensiklopediyası','Bitki axtarın','Axtar'],de:['Pflanzenlexikon','Pflanzen suchen','Suchen'],fr:['Encyclopédie des plantes','Rechercher une plante','Rechercher'],es:['Enciclopedia de plantas','Buscar planta','Buscar'],pt:['Enciclopédia de plantas','Pesquisar planta','Pesquisar'],ar:['موسوعة النباتات','ابحث عن نبات','بحث'],tr:['Bitki Ansiklopedisi','Bitki ara','Ara'],uk:['Енциклопедія рослин','Знайти рослину','Знайти'],kk:['Өсімдіктер энциклопедиясы','Өсімдікті іздеу','Іздеу'],ky:['Өсүмдүктөр энциклопедиясы','Өсүмдүктү издөө','Издөө'],tg:['Донишномаи растаниҳо','Растаниҳоро ҷустуҷӯ кунед','Ҷустуҷӯ'],fa:['دانشنامه گیاهان','جستجوی گیاه','جستجو'],hi:['वनस्पति विश्वकोश','पौधा खोजें','खोजें'],bn:['উদ্ভিদ বিশ্বকোষ','উদ্ভিদ খুঁজুন','খুঁজুন'],zh:['植物百科','搜索植物','搜索'],ja:['植物図鑑','植物を検索','検索'],ko:['식물 백과사전','식물 검색','검색'],it:['Enciclopedia delle piante','Cerca una pianta','Cerca'],nl:['Plantenencyclopedie','Zoek een plant','Zoeken'],pl:['Encyklopedia roślin','Znajdź roślinę','Szukaj'],cs:['Encyklopedie rostlin','Vyhledat rostlinu','Hledat'],sk:['Encyklopédia rastlín','Vyhľadať rastlinu','Hľadať'],sv:['Växtlexikon','Sök växt','Sök'],no:['Planteleksikon','Søk etter plante','Søk'],da:['Planteleksikon','Søg plante','Søg'],fi:['Kasvikirja','Etsi kasvi','Hae'],el:['Εγκυκλοπαίδεια φυτών','Αναζήτηση φυτού','Αναζήτηση'],he:['אנציקלופדיית צמחים','חפש צמח','חיפוש'],id:['Ensiklopedia tanaman','Cari tanaman','Cari'],ms:['Ensiklopedia tumbuhan','Cari tumbuhan','Cari'],th:['สารานุกรมพืช','ค้นหาพืช','ค้นหา'],vi:['Bách khoa thực vật','Tìm kiếm cây','Tìm kiếm'],ro:['Enciclopedia plantelor','Caută o plantă','Caută']};
+const PJ=t=>{try{let s=String(t||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');if(s[0]!='{'&&s[0]!='['){const a=s.indexOf('['),b=s.indexOf('{');const start=a>=0&&(b<0||a<b)?a:b;const end=Math.max(s.lastIndexOf(']'),s.lastIndexOf('}'));s=s.slice(start,end+1)}return JSON.parse(s)}catch{throw new Error('ИИ вернул неполный ответ, попробуйте ещё раз.')}};
+const BUILTIN=true;
+const split=u=>{const m=/^data:(image\/[\w+.-]+);base64,(.+)$/.exec(u||'');return m&&{mime:m[1],data:m[2],url:u}};
+async function jf(url,headers,body,name){
+  let r;const ac=new AbortController,tm=setTimeout(()=>ac.abort(),30000);try{r=await fetch(url,{method:'POST',signal:ac.signal,headers:{'content-type':'application/json',...headers},body:JSON.stringify(body)})}catch(e){throw new Error(e.name=='AbortError'?'долгий ответ':'нет связи')}finally{clearTimeout(tm)}
+  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error((d.error&&(d.error.message||d.error))||('HTTP '+r.status));return d}
+const oa=(system,messages,imgs)=>[{role:'system',content:system},...messages.map((m,i)=>i==messages.length-1&&imgs?.length?{role:m.role,content:[{type:'text',text:m.content},...imgs.map(img=>({type:'image_url',image_url:{url:img.url}}))]}:m)];
+async function llm(system,messages,imgUrls,max){
+  const arr=Array.isArray(imgUrls)?imgUrls:[imgUrls];
+  const imgs=arr.filter(Boolean).map(split).filter(Boolean),errs=[],ok=t=>t&&String(t).trim().length>1;
+  try{
+    const d=await jf('/api/chat',{},{
+      system,
+      messages:oa(system,messages,imgs),
+      max_tokens:max
+    });
+    if(ok(d.text))return d.text;
+  }catch(e){errs.push(e.message)}
+  throw new Error('ИИ-сервис недоступен: для анализа нужно открыть сайт через сервер с настроенным /api/chat. Фото не отправляются без серверного API. '+(errs.length?'Код ошибки: '+errs.join(' | '):''))}
+const DIRECT={
+ async '/api/analyze'({images,lang}){if(!images||!images.length)throw new Error('Нет изображений');
+  const text=await llm(`Ты ботаник-эксперт. Проанализируй все переданные фотографии растений. Сравни фото между собой: объединяй в один элемент только изображения явно одного растения или вида, а разные растения, деревья, травы и культуры выдай отдельно. Не группируй разные виды только из-за схожего общего вида. Отвечай на ${LN[lang]}. Верни ТОЛЬКО JSON-массив без markdown. Для каждого уникального растения или группы одинаковых фото используй объект: {"name":"","latin":"","family":"","type":"","confidence":0-100,"description":"","care":{"water":"","light":"","soil":"","temperature":""},"watering_days":число,"problems":["видимые болезни или проблемы"],"toxic":"безопасность для людей/животных","fun_fact":"","photoIndexes":[индексы исходных фото с нуля],"error":"только если растение отсутствует или фото не распознано"}.`,[{role:'user',content:'Определи и раздельно сгруппируй растения по переданным фото.'}],images,1800);
+  const d=PJ(text);return Array.isArray(d)?d:[d]},
+ async '/api/compare'({a,b,lang}){return PJ(await llm(`Ты ботаник. Сравни два растения на ${LN[lang]}. Верни ТОЛЬКО JSON: {"rows":[{"param":"","a":"","b":""}],"verdict":""}. Параметры: семейство, размер, полив, свет, температура, сложность ухода, токсичность, цветение, польза.`,[{role:'user',content:a+' и '+b}],null,1200))},
+ async '/api/expert'({messages,lang}){return{text:await llm(`Ты опытный агроном-консультант по растениям. Отвечай на ${LN[lang]}, практично и дружелюбно, до 200 слов.`,messages.slice(-12),null,900)}}
+};
+async function api(p,body){
+  body={...body,lang:S.lang};
+  if(p==='/api/encyclopedia'){
+    const r=await fetch(p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(d.error||'Не удалось выполнить поиск');
+    return d;
+  }
+  return DIRECT[p](body)
+}
+const spin=()=>'<div class="spin"></div>', err=m=>`<div class="err">⚠️ ${esc(m)}</div>`;
+async function shrink(f){
+  const draw=(src,w,h)=>{const limit=S.compressImages!==false?1024:1600,k=Math.min(1,limit/Math.max(w,h)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(src,0,0,c.width,c.height);return c.toDataURL('image/jpeg',S.compressImages!==false?.85:.92)};
+  const readURL=b=>new Promise((ok,no)=>{const r=new FileReader;r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(b)});
+  try{const bm=await createImageBitmap(f,{imageOrientation:'from-image'});const d=draw(bm,bm.width,bm.height);bm.close&&bm.close();return d}catch{}
+  try{const u=await readURL(f);const i=await new Promise((ok,no)=>{const m=new Image;m.onload=()=>ok(m);m.onerror=no;m.src=u});return draw(i,i.naturalWidth||i.width,i.naturalHeight||i.height)}catch{}
+  if(/^image\/(jpeg|png|webp|gif)$/.test(f.type)&&f.size<4e6){const u=await readURL(f);if(u.startsWith('data:image/'))return u}
+  throw new Error('Не удалось открыть фото. Формат HEIC/HEIF не поддерживается браузером — сделайте скриншот фото или сохраните его как JPG/PNG и загрузите снова.')}
+
+async function addFiles(files){
+  const list=[...files].filter(f=>f.type.startsWith('image/')||/\.(jpe?g|png|webp|gif|bmp|avif|heic|heif)$/i.test(f.name||''));
+  for(const f of list){
+    if(pending.length>=5)break;
+    try{pending.push({name:f.name,img:await shrink(f)})}catch(e){alert(e.message)}
+  }
+  tab='analyze';go('analyze');renderPending()
+}
+async function analyzePending(){
+  if(!pending.length)return;
+  $('#view').innerHTML=`<div class="card" style="text-align:center">${spin()}<p class="mut">Анализирую…</p></div>`;
+  try{const images=pending.map(x=>x.img);if(images.reduce((size,image)=>size+image.length,0)>3300000)throw new Error('Суммарный размер фотографий слишком большой. Загрузите меньше фото или включите сжатие в настройках.');const d=await api('/api/analyze',{images});const list=Array.isArray(d)?d:[d];
+    for(const result of list){if(!result.error){const indexes=(result.photoIndexes||[0]).filter(i=>pending[i]);const img=indexes.length?pending[indexes[0]].img:pending[0].img;result.img=img;const rec={id:Date.now()+Math.random(),img,date:new Date().toLocaleString('ru'),...result};H.unshift(rec)} }
+    H=H.slice(0,30);save();showBatch(list.filter(r=>!r.error));pending=[]}
+  catch(e){go('analyze');renderPending();$('#pendingArea').insertAdjacentHTML('beforeend',err(e.message))}
+}
+function removePending(i){pending.splice(i,1);renderPending()}
+function renderPending(){
+  $('#pendingArea').innerHTML=pending.length?`<div class="grid" style="margin:18px 0">${pending.map((p,i)=>`<div class="mini"><img src="${p.img}" alt=""><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b style="font-size:12px">Фото ${i+1}</b><button class="pill" onclick="removePending(${i})">Удалить</button></div></div>`).join('')}</div><div class="row"><button class="btn pri" onclick="analyzePending()">🔬 Анализировать</button></div>`:''
+}
+function showBatch(results){if(!results.length){$('#view').innerHTML=`<div class="card"><p class="mut">Растения не распознаны.</p><button class="btn" onclick="go('analyze')">Загрузить ещё</button></div>`;return}$('#view').innerHTML=`<div class="row" style="justify-content:flex-start;margin:0 0 14px"><button class="btn" onclick="go('analyze')">Новые фото</button></div>${results.map(r=>{const c=r.care||{},indexes=(r.photoIndexes||[]).filter(i=>pending[i]),img=indexes.length?pending[indexes[0]].img:(r.img||pending[0]?.img||'');return`<div class="card res"><div><img src="${img}"><div class="mut" style="margin-top:8px;font-size:12px">Фото: ${(r.photoIndexes||[]).map(i=>i+1).join(', ')||'—'}</div></div><div><h2>${esc(r.name)}</h2><div class="mut"><i>${esc(r.latin)}</i> · ${esc(r.family)} · ${esc(r.type)}</div><p>Уверенность: <b>${+r.confidence||0}%</b></p><div class="bar"><i style="width:${+r.confidence||0}%"></i></div><p>${esc(r.description)}</p><table><tr><td>💧 Полив</td><td>${esc(c.water)}</td></tr><tr><td>☀️ Свет</td><td>${esc(c.light)}</td></tr><tr><td>🪴 Почва</td><td>${esc(c.soil)}</td></tr><tr><td>🌡 Температура</td><td>${esc(c.temperature)}</td></tr><tr><td>⚠️ Безопасность</td><td>${esc(r.toxic)}</td></tr></table>${(r.problems||[]).length?`<p><b>Проблемы:</b> ${r.problems.map(p=>`<span class="tag">${esc(p)}</span>`).join('')}</p>`:''}<p class="mut">💡 ${esc(r.fun_fact)}</p></div></div>`}).join('')}`}
+function show(r){const c=r.care||{};$('#view').innerHTML=`<div class="card res"><div><img src="${r.img}"><div class="row" style="margin-top:12px"><button class="btn pri" onclick="addG(${r.id})">🌱 В оранжерею</button></div></div>
+<div><h2>${esc(r.name)}</h2><div class="mut"><i>${esc(r.latin)}</i> · ${esc(r.family)} · ${esc(r.type)}</div>
+<p>Уверенность: <b>${+r.confidence||0}%</b></p><div class="bar"><i style="width:${+r.confidence||0}%"></i></div>
+<p>${esc(r.description)}</p>
+<table><tr><td>💧 Полив</td><td>${esc(c.water)}</td></tr><tr><td>☀️ Свет</td><td>${esc(c.light)}</td></tr><tr><td>🪴 Почва</td><td>${esc(c.soil)}</td></tr><tr><td>🌡 Температура</td><td>${esc(c.temperature)}</td></tr><tr><td>⚠️ Безопасность</td><td>${esc(r.toxic)}</td></tr></table>
+${(r.problems||[]).length?`<p><b>Проблемы:</b> ${r.problems.map(p=>`<span class="tag">${esc(p)}</span>`).join('')}</p>`:''}
+<p class="mut">💡 ${esc(r.fun_fact)}</p><button class="btn" onclick="go('analyze')">Новое фото</button></div></div>`}
+function addG(id){const r=H.find(x=>x.id==id);if(!r||G.find(g=>g.id==id))return;G.push({id,name:r.name,img:r.img,days:+r.watering_days||7,last:Date.now()});save();go('green')}
+
+const R={
+analyze_html:()=>`<div class="card drop" id="dz"><div class="ic" style="margin:auto;width:56px;height:56px;font-size:30px">🌿</div><div class="row"><button class="btn pri" onclick="cam.click()">📷 Сделать фото</button><button class="btn" onclick="file.click()">🖼 Выбрать фото</button></div></div><div id="pendingArea" class="card"></div>`,
+analyze(){ $('#view').innerHTML=R.analyze_html();const dz=$('#dz');dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};dz.ondragleave=()=>dz.classList.remove('drag');dz.ondrop=e=>{e.preventDefault();addFiles(e.dataTransfer.files)};renderPending()},
+history(){$('#view').innerHTML=H.length?`<div class="grid">${H.map(r=>`<div class="mini">${r.img?`<img src="${r.img}">`:''}<b>${esc(r.name)}</b><div class="mut" style="font-size:12px">${esc(r.date)}</div><div class="row" style="margin-top:8px;justify-content:flex-start"><button class="pill" onclick="show(H.find(x=>x.id==${r.id}))">Открыть</button><button class="pill" onclick="H=H.filter(x=>x.id!=${r.id});save();R.history()">🗑</button></div></div>`).join('')}</div>`:'<div class="card mut" style="text-align:center">История пуста. Проанализируйте первое растение 🌱</div>'},
+green(){$('#view').innerHTML=G.length?`<div class="grid">${G.map(g=>`<div class="mini">${g.img?`<img src="${g.img}">`:''}<b>${esc(g.name)}</b><div class="mut">Полив каждые ${g.days} дн.</div><div class="row" style="margin-top:8px;justify-content:flex-start"><button class="pill" onclick="water(${g.id})">💧 Полил</button><button class="pill" onclick="G=G.filter(x=>x.id!=${g.id});save();R.green()">🗑</button></div></div>`).join('')}</div>`:'<div class="card mut" style="text-align:center">Оранжерея пуста. Добавьте растение из результата анализа.</div>'},
+cal(){const L=G.map(g=>({...g,next:g.last+g.days*864e5})).sort((a,b)=>a.next-b.next);$('#view').innerHTML=`<div class="card"><h2>Календарь полива</h2>${L.length?`<table>${L.map(g=>{const d=Math.ceil((g.next-Date.now())/864e5);return`<tr><td><b>${esc(g.name)}</b></td><td>${new Date(g.next).toLocaleDateString('ru')}</td><td>${d<=0?'<span class="tag">💧 пора поливать!</span>':`через ${d} дн.`}</td><td><button class="pill" onclick="water(${g.id},1)">Полил</button></td></tr>`}).join('')}</table>`:'<p class="mut">Нет растений в оранжерее.</p>'}</div>`},
+disease(){$('#view').innerHTML=`<div class="card"><h2>Справочник болезней растений</h2><div class="grid"><div class="mini"><b>Мучнистая роса</b><p class="mut">Белый мучнистый налёт на листьях.</p><p>Отделите поражённые листья, улучшите вентиляцию и проверьте режим полива.</p></div><div class="mini"><b>Пятнистость</b><p class="mut">Коричневые или чёрные пятна.</p><p>Удалите поражённые части и не допускайте попадания воды на листву.</p></div><div class="mini"><b>Корневая гниль</b><p class="mut">Корни темнеют и становятся мягкими.</p><p>Уменьшите полив, замените грунт и пересадите растение в дренированный горшок.</p></div><div class="mini"><b>Паутинный клещ</b><p class="mut">Тонкая паутинка и точки на листьях.</p><p>Изолируйте растение и обработайте разрешённым для комнатных растений препаратом.</p></div></div><p class="mut">Справочник — предварительная помощь. При сомнениях обратитесь к специалисту.</p></div>`},
+enc(){const [title,placeholder,search]=ENC_TEXT[S.lang]||ENC_TEXT.ru;const rtl=['ar','fa','he'].includes(S.lang);$('#view').innerHTML=`<div class="card"><h2>${esc(title)}</h2><form id="encForm" style="display:flex;gap:10px"><input class="enc-input" type="text" id="q" name="q" lang="${S.lang}" dir="${rtl?'rtl':'auto'}" placeholder="${esc(placeholder)}" autocomplete="on" autocapitalize="sentences" spellcheck="true"><button class="btn pri" type="submit">${esc(search)}</button></form><div id="out"></div></div>`;$('#encForm').onsubmit=e=>{e.preventDefault();ask()};$('#q').focus()},
+cmp(){$('#view').innerHTML=`<div class="card"><h2>Сравнение растений</h2><div style="display:flex;gap:10px;flex-wrap:wrap"><input type="text" id="a" placeholder="Растение 1" style="flex:1"><input type="text" id="b" placeholder="Растение 2" style="flex:1"><button class="btn pri" onclick="compare()">Сравнить</button></div><div id="out"></div></div>`},
+exp(){$('#view').innerHTML=`<div class="card"><h2>Эксперт-агроном</h2><div class="chat" id="chat">${chat.map(m=>`<div class="msg ${m.role=='user'?'u':'a'}">${esc(m.content)}</div>`).join('')||'<div class="mut">Задайте вопрос: почему желтеют листья, как пересадить, чем подкормить…</div>'}</div><div style="display:flex;gap:10px"><input type="text" id="q" placeholder="Ваш вопрос…"><button class="btn pri" onclick="send()">Отправить</button></div></div>`;$('#q').onkeydown=e=>e.key=='Enter'&&send()}};
+function water(id,c){const g=G.find(x=>x.id==id);g.last=Date.now();save();c?R.cal():R.green()}
+function safeHttpsUrl(value){try{const u=new URL(value);return u.protocol==='https:'?u.href:''}catch{return''}}
+function showEncyclopedia(data,query){
+  const images=(data.images||[]).filter(image=>safeHttpsUrl(image.url));
+  const sources=(data.sources||[]).filter(source=>safeHttpsUrl(source.url));
+  const care=data.care||{};
+  const reference=data.reference&&data.reference.extract?`<h3>Справочная информация</h3><p>${esc(data.reference.extract)}</p>`:'';
+  const facts=(data.interesting_facts||[]).map(f=>`<li>${esc(f)}</li>`).join('');
+  const imageGrid=images.length?`<div class="grid">${images.map(image=>`<a class="mini" href="${esc(safeHttpsUrl(image.page_url)||image.url)}" target="_blank" rel="noopener noreferrer"><img src="${esc(image.url)}" alt="${esc(image.title||data.title||query)}" loading="lazy"><span>${esc(image.title||'Изображение · Wikimedia Commons')}</span></a>`).join('')}</div>`:`<p class="mut">Изображения для этого запроса не найдены.</p>`;
+  const sourceLinks=sources.map(source=>`<a href="${esc(safeHttpsUrl(source.url))}" target="_blank" rel="noopener noreferrer">${esc(source.title)}</a>`).join(' · ');
+  $('#out').innerHTML=`<article class="card"><h2>${esc(data.title||query)}</h2>${data.scientific_name?`<p class="mut"><i>${esc(data.scientific_name)}</i></p>`:''}<p>${esc(data.summary||'Описание не найдено.')}</p>${reference}<h3>Изображения</h3>${imageGrid}<h3>Уход</h3><table><tr><td>💧 Полив</td><td>${esc(care.watering)}</td></tr><tr><td>☀️ Освещение</td><td>${esc(care.light)}</td></tr><tr><td>🪴 Почва</td><td>${esc(care.soil)}</td></tr><tr><td>🌡 Температура</td><td>${esc(care.temperature)}</td></tr></table><h3>Чем полезно</h3><p>${esc(data.uses||'Информация не найдена.')}</p><h3>Безопасность</h3><p>${esc(data.toxicity||'Данные о безопасности не указаны; проверьте надёжные источники.')}</p>${facts?`<h3>Интересные факты</h3><ul>${facts}</ul>`:''}<p class="mut">${esc(data.disclaimer||'Сведения сгенерированы ИИ и требуют проверки; не используйте их как медицинскую рекомендацию.')}</p><p>${sourceLinks}</p><p><a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank" rel="noopener noreferrer">Искать информацию в Google</a> · <a href="https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}" target="_blank" rel="noopener noreferrer">Искать изображения в Google</a></p></article>`;
+}
+async function ask(){
+  const q=$('#q').value.trim();if(!q)return;
+  $('#out').innerHTML=spin();
+  try{const data=await api('/api/encyclopedia',{query:q});showEncyclopedia(data,q)}
+  catch(e){const direct=`https://www.google.com/search?q=${encodeURIComponent(q)}`;$('#out').innerHTML=err(e.message)+`<p><a href="${esc(direct)}" target="_blank" rel="noopener noreferrer">Открыть поиск Google</a></p>`}
+}
+async function compare(){const a=$('#a').value.trim(),b=$('#b').value.trim();if(!a||!b)return;$('#out').innerHTML=spin();try{const d=await api('/api/compare',{a,b});$('#out').innerHTML=`<table><tr><th></th><th>${esc(a)}</th><th>${esc(b)}</th></tr>${d.rows.map(r=>`<tr><td class="mut">${esc(r.param)}</td><td>${esc(r.a)}</td><td>${esc(r.b)}</td></tr>`).join('')}</table><p>🏆 ${esc(d.verdict)}</p>`}catch(e){$('#out').innerHTML=err(e.message)}}
+async function send(){const q=$('#q').value.trim();if(!q)return;chat.push({role:'user',content:q});R.exp();$('#chat').insertAdjacentHTML('beforeend',spin());try{const d=await api('/api/expert',{messages:chat});chat.push({role:'assistant',content:d.text});R.exp()}catch(e){chat.pop();R.exp();$('#chat').insertAdjacentHTML('beforeend',err(e.message))}$('#chat').scrollTop=1e9}
+
+async function runDiagnostics(){
+  const pwaReady=(location.protocol==='http:'||location.protocol==='https:')&&'serviceWorker' in navigator&&!!document.querySelector('link[rel="manifest"]');
+  const checks={
+    'IndexedDB':!!await openDB().catch(()=>null),
+    'Сжатие изображений':!!(window.createImageBitmap&&document.createElement('canvas').getContext),
+    'Уведомления':('Notification' in window),
+    'PWA':pwaReady,
+    'Локальный профиль':typeof localStorage!=='undefined'
+  };
+  const output=Object.entries(checks).map(([name,ok])=>`<p>${ok?'✅':'❌'} ${esc(name)}</p>`).join('');
+  const old=$('#diagnosticOutput');if(old)old.remove();
+  dlg.insertAdjacentHTML('beforeend',`<div id="diagnosticOutput" class="mut" style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px">${output}</div>`);
+}
+function checkWateringNotifications(){
+  if(!S.wateringNotifications||!('Notification' in window)||Notification.permission!=='granted')return;
+  const today=new Date().toISOString().slice(0,10);
+  G.forEach(g=>{const due=g.last+g.days*864e5,key='bot_water_notice_'+g.id;if(due<=Date.now()&&localStorage.getItem(key)!==today){new Notification('Пора полить растение',{body:g.name||'Проверьте оранжерею',tag:'watering-'+g.id});localStorage.setItem(key,today)}});
+}
+
+file.onchange=cam.onchange=e=>{addFiles(e.target.files);e.target.value=''};
+document.addEventListener('paste',e=>{const files=[...e.clipboardData.files].filter(f=>f.type.startsWith('image/'));if(files.length)addFiles(files)});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+setInterval(checkWateringNotifications,30*60*1000);
+loadDB().then(()=>{save();go('analyze');checkWateringNotifications()});
+</script>
+</body>
+</html>
