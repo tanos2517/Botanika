@@ -1,0 +1,10 @@
+{
+  "name": "Botanika AI Pro",
+  "short_name": "Botanika AI",
+  "description": "Распознавание растений и уход за оранжереей",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#04140d",
+  "theme_color": "#0a2a1d",
+  "icons": []
+}

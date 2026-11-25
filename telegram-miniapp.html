@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Botanika</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: var(--tg-theme-bg-color, #f3f6f2);
+      --card: var(--tg-theme-section-bg-color, #fff);
+      --text: var(--tg-theme-text-color, #18231d);
+      --muted: var(--tg-theme-hint-color, #6d7b70);
+      --accent: var(--tg-theme-button-color, #2c8a55);
+      --accent-text: var(--tg-theme-button-text-color, #fff);
+      --line: color-mix(in srgb, var(--text) 12%, transparent);
+      font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    * { box-sizing: border-box }
+    body { margin: 0; min-height: 100dvh; background: var(--bg); color: var(--text) }
+    button, input, select { font: inherit }
+    button { cursor: pointer }
+    .shell { max-width: 760px; margin: auto; padding: 14px 14px calc(92px + env(safe-area-inset-bottom)) }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 2px 16px }
+    h1 { margin: 0; font-size: 22px }
+    h2 { margin: 0 0 8px; font-size: 19px }
+    h3 { margin: 0 0 6px; font-size: 16px }
+    .muted { color: var(--muted); font-size: 14px }
+    .card { padding: 16px; margin: 0 0 12px; border: 1px solid var(--line); border-radius: 18px; background: var(--card) }
+    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; position: fixed; z-index: 3; bottom: 0; left: 0; right: 0; padding: 8px 8px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--bg) }
+    .tab, .secondary, .primary { border: 0; border-radius: 12px; padding: 11px 9px; color: var(--text); background: transparent }
+    .tab { font-size: 12px; line-height: 1.15 }
+    .tab.active { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); font-weight: 700 }
+    .primary { width: 100%; color: var(--accent-text); background: var(--accent); font-weight: 700 }
+    .secondary { border: 1px solid var(--line); background: color-mix(in srgb, var(--text) 4%, var(--card)) }
+    .upload { display: grid; gap: 12px; text-align: center; padding: 24px 16px }
+    .upload input { width: 100%; padding: 10px; border: 1px dashed var(--line); border-radius: 12px; color: var(--text) }
+    .photo { display: block; width: 100%; max-height: 300px; object-fit: cover; border-radius: 12px; background: color-mix(in srgb, var(--text) 7%, transparent) }
+    .plant { display: grid; grid-template-columns: minmax(0, 130px) 1fr; gap: 14px; align-items: start }
+    .plant .photo { aspect-ratio: 1; max-height: 130px }
+    .grid { display: grid; gap: 12px }
+    .field { display: grid; gap: 7px; margin: 14px 0 }
+    select { width: 100%; padding: 11px; border: 1px solid var(--line); border-radius: 11px; background: var(--card); color: var(--text) }
+    .toggle { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line) }
+    .toggle:last-child { border-bottom: 0 }
+    .error { padding: 12px; margin-bottom: 12px; border-radius: 12px; color: #a12626; background: #ffe8e5 }
+    .success { padding: 10px 0; color: var(--accent); font-size: 14px }
+    .facts { display: grid; gap: 8px; margin: 12px 0 }
+    .fact { display: grid; grid-template-columns: 90px 1fr; gap: 8px; padding-bottom: 7px; border-bottom: 1px solid var(--line) }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px }
+    .row button { flex: 1 }
+    .empty { padding: 30px 16px; text-align: center }
+    .pager { display: flex; gap: 8px; justify-content: space-between; margin: 12px 0 }
+    .pager button { flex: 1 }
+    .loading { padding: 28px; text-align: center; color: var(--muted) }
+    @media (max-width: 520px) {
+      .plant { grid-template-columns: 84px 1fr; gap: 10px }
+      .plant .photo { max-height: 84px }
+      .fact { grid-template-columns: 78px 1fr }
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { color-scheme: dark }
+      .error { color: #ffc9c3; background: #512823 }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <h1>🌿 Botanika</h1>
+      <span id="user-name" class="muted"></span>
+    </header>
+    <div id="notice"></div>
+    <section id="content" class="loading">Загружаю Botanika…</section>
+  </main>
+  <nav id="tabs" class="tabs" aria-label="Botanika"></nav>
+  <script>
+    'use strict';
+
+    const tg = window.Telegram && window.Telegram.WebApp;
+    const initData = tg && tg.initData ? tg.initData : '';
+    const languageCodes = 'ru en uz az de fr es pt ar tr uk kk ky tg fa hi bn zh ja ko it nl pl cs sk sv no da fi el he id ms th vi ro'.split(' ');
+    const text = {
+      ru: { analyze: 'Анализ', history: 'История', greenhouse: 'Оранжерея', settings: 'Настройки', pick: 'Сфотографируй растение или выбери фото', analyzeNow: 'Анализировать', analyzing: 'Анализирую фото…', noHistory: 'История пока пуста. Добавь первое растение.', noPlants: 'Оранжерея пока пуста. Добавь растение из результата анализа.', alreadyAdded: 'Растение уже в оранжерее.', more: 'Загрузить ещё', previous: 'Предыдущая страница', add: 'В оранжерею', water: 'Полил', remove: 'Удалить', language: 'Язык приложения и ответов бота', reminders: 'Напоминания об уходе', reminderHelp: 'Бот напишет в личный чат около 09:00 по местному времени, когда растению понадобится полив. Повтор — раз в день, пока не отметишь полив.', timezone: 'Часовой пояс', saved: 'Настройки сохранены', openInTelegram: 'Открой эту страницу из кнопки в Telegram-боте.', error: 'Не удалось загрузить данные.', confidence: 'Уверенность', description: 'Описание', care: 'Уход', waterInfo: 'Полив', light: 'Свет', soil: 'Почва', temperature: 'Температура', safety: 'Безопасность', problems: 'Проблемы', details: 'Подробнее', due: 'Полить сегодня', until: 'Следующий полив', emptyPhoto: 'Фото не загрузилось', historyDelete: 'Удалить анализ', loadError: 'Не удалось загрузить фото.' },
+      en: { analyze: 'Analyze', history: 'History', greenhouse: 'Greenhouse', settings: 'Settings', pick: 'Take a plant photo or choose one', analyzeNow: 'Analyze photo', analyzing: 'Analyzing photo…', noHistory: 'Your history is empty. Analyze your first plant.', noPlants: 'Your greenhouse is empty. Add a plant from an analysis.', alreadyAdded: 'This plant is already in your greenhouse.', more: 'Next page', previous: 'Previous page', add: 'Add to greenhouse', water: 'Watered', remove: 'Remove', language: 'App and bot reply language', reminders: 'Plant-care reminders', reminderHelp: 'The bot will message your private chat around 09:00 in your local time when a plant needs watering. It repeats daily until you mark it watered.', timezone: 'Time zone', saved: 'Settings saved', openInTelegram: 'Open this page using the button in your Telegram bot.', error: 'Could not load data.', confidence: 'Confidence', description: 'Description', care: 'Care', waterInfo: 'Watering', light: 'Light', soil: 'Soil', temperature: 'Temperature', safety: 'Safety', problems: 'Problems', details: 'Details', due: 'Water today', until: 'Next watering', emptyPhoto: 'Photo could not be loaded', historyDelete: 'Delete analysis', loadError: 'Could not load photo.' },
+      uz: { analyze: 'Tahlil', history: 'Tarix', greenhouse: 'Issiqxona', settings: 'Sozlamalar', pick: 'O‘simlikni suratga oling yoki rasm tanlang', analyzeNow: 'Tahlil qilish', analyzing: 'Rasm tahlil qilinmoqda…', noHistory: 'Tarix hozircha bo‘sh. Birinchi o‘simlikni tahlil qiling.', noPlants: 'Issiqxona bo‘sh. Tahlil natijasidan o‘simlik qo‘shing.', alreadyAdded: 'Bu o‘simlik issiqxonada allaqachon bor.', more: 'Keyingi sahifa', previous: 'Oldingi sahifa', add: 'Issiqxonaga qo‘shish', water: 'Sug‘ordim', remove: 'O‘chirish', language: 'Ilova va bot javoblari tili', reminders: 'Parvarish eslatmalari', reminderHelp: 'O‘simlikni sug‘orish vaqti kelganda bot mahalliy vaqt bilan taxminan 09:00 da shaxsiy chatga yozadi. Sug‘orishni belgilamaguningizcha har kuni eslatadi.', timezone: 'Vaqt mintaqasi', saved: 'Sozlamalar saqlandi', openInTelegram: 'Bu sahifani Telegram botidagi tugma orqali oching.', error: 'Ma’lumotlarni yuklab bo‘lmadi.', confidence: 'Ishonchlilik', description: 'Tavsif', care: 'Parvarish', waterInfo: 'Sug‘orish', light: 'Yorug‘lik', soil: 'Tuproq', temperature: 'Harorat', safety: 'Xavfsizlik', problems: 'Muammolar', details: 'Batafsil', due: 'Bugun sug‘orish kerak', until: 'Keyingi sug‘orish', emptyPhoto: 'Rasm yuklanmadi', historyDelete: 'Tahlilni o‘chirish', loadError: 'Rasmni yuklab bo‘lmadi.' }
+    };
+    const state = { language: 'ru', timezone: 'UTC', remindersEnabled: false, tab: 'analyze', history: [], total: 0, offset: 0, greenhouse: [], busy: false, imageUrls: [] };
+    const content = document.getElementById('content');
+    const notice = document.getElementById('notice');
+    const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    const t = key => (text[state.language] || text.en)[key] || text.en[key] || key;
+
+    function api(path, options) {
+      const request = options || {};
+      request.headers = Object.assign({}, request.headers || {}, {
+        'X-Telegram-Init-Data': initData,
+        'X-Time-Zone': state.timezone
+      });
+      return fetch(path, request).then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+        return data;
+      });
+    }
+
+    function showNotice(message, isError) {
+      notice.innerHTML = message ? `<div class="${isError ? 'error' : 'success'}">${esc(message)}</div>` : '';
+    }
+
+    function saveObjectUrls() {
+      state.imageUrls.forEach(url => URL.revokeObjectURL(url));
+      state.imageUrls = [];
+    }
+
+    function appTabs() {
+      const names = ['analyze', 'history', 'greenhouse', 'settings'];
+      document.getElementById('tabs').innerHTML = names.map(name =>
+        `<button class="tab ${state.tab === name ? 'active' : ''}" data-tab="${name}">${esc(t(name))}</button>`
+      ).join('');
+    }
+
+    function careRows(item) {
+      const care = item.care || {};
+      return [
+        [t('waterInfo'), care.water],
+        [t('light'), care.light],
+        [t('soil'), care.soil],
+        [t('temperature'), care.temperature],
+        [t('safety'), item.toxic]
+      ].filter(row => row[1]).map(row => `<div class="fact"><b>${esc(row[0])}</b><span>${esc(row[1])}</span></div>`).join('');
+    }
+
+    function analysisCard(item, actions) {
+      const image = item.imagePath
+        ? `<img class="photo" data-photo="${esc(item.imagePath)}" alt="${esc(item.name)}">`
+        : `<div class="photo"></div>`;
+      const problems = Array.isArray(item.problems) && item.problems.length
+        ? `<p><b>${esc(t('problems'))}:</b> ${item.problems.map(esc).join(', ')}</p>`
+        : '';
+      return `<article class="card">
+        <div class="plant"><div>${image}</div><div><h2>${esc(item.name)}</h2><div class="muted"><i>${esc(item.latin)}</i>${item.family ? ` · ${esc(item.family)}` : ''}</div>
+        <div class="muted">${esc(item.date || '')}</div><p>${esc(t('confidence'))}: ${Number(item.confidence) || 0}%</p></div></div>
+        <details><summary>${esc(t('details'))}</summary><h3>${esc(t('description'))}</h3><p>${esc(item.description)}</p><h3>${esc(t('care'))}</h3><div class="facts">${careRows(item)}</div>${problems}<p>${esc(item.fun_fact || '')}</p></details>
+        ${actions ? `<div class="row"><button class="secondary" data-action="add" data-id="${esc(item.id)}">${esc(t('add'))}</button><button class="secondary" data-action="delete" data-id="${esc(item.id)}">${esc(t('historyDelete'))}</button></div>` : ''}
+      </article>`;
+    }
+
+    function greenhouseCard(plant) {
+      const due = Number(plant.last || 0) + (Number(plant.days) || 7) * 86400000;
+      const dueLabel = due <= Date.now() ? t('due') : `${t('until')}: ${new Date(due).toLocaleDateString(state.language)}`;
+      const image = plant.imagePath
+        ? `<img class="photo" data-photo="${esc(plant.imagePath)}" alt="${esc(plant.name)}">`
+        : `<div class="photo"></div>`;
+      return `<article class="card"><div class="plant"><div>${image}</div><div><h2>${esc(plant.name)}</h2><div class="muted">${esc(dueLabel)}</div><div class="muted">${esc(t('waterInfo'))}: ${Number(plant.days) || 7} ${state.language === 'ru' ? 'дн.' : 'days'}</div><div class="row"><button class="primary" data-action="water" data-id="${esc(plant.id)}">💧 ${esc(t('water'))}</button></div></div></div></article>`;
+    }
+
+    function renderAnalyze() {
+      content.innerHTML = `<section class="card upload"><h2>${esc(t('analyze'))}</h2><p class="muted">${esc(t('pick'))}</p><input id="photo-input" type="file" accept="image/*" capture="environment"><button id="analyze-button" class="primary" disabled>${esc(t('analyzeNow'))}</button></section><div id="result"></div>`;
+    }
+
+    function renderHistory() {
+      content.innerHTML = state.history.length
+        ? `<div class="grid">${state.history.map(item => analysisCard(item, true)).join('')}</div>
+          <div class="pager">${state.offset > 0 ? `<button class="secondary" data-action="prev-page">${esc(t('previous'))}</button>` : ''}${state.offset + state.history.length < state.total ? `<button class="secondary" data-action="next-page">${esc(t('more'))}</button>` : ''}</div>`
+        : `<div class="card empty">${esc(t('noHistory'))}</div>`;
+      hydratePhotos(content);
+    }
+
+    function renderGreenhouse() {
+      content.innerHTML = state.greenhouse.length
+        ? `<div class="grid">${state.greenhouse.map(greenhouseCard).join('')}</div>`
+        : `<div class="card empty">${esc(t('noPlants'))}</div>`;
+      hydratePhotos(content);
+    }
+
+    function renderSettings() {
+      const displayNames = new Intl.DisplayNames([state.language], { type: 'language' });
+      const languages = languageCodes.map(code => {
+        let name = code;
+        try { name = displayNames.of(code) || code; } catch {}
+        return `<option value="${code}" ${state.language === code ? 'selected' : ''}>${esc(name)}</option>`;
+      }).join('');
+      content.innerHTML = `<section class="card">
+        <h2>${esc(t('settings'))}</h2>
+        <label class="field"><span>${esc(t('language'))}</span><select id="language-select">${languages}</select></label>
+        <div class="toggle"><div><b>${esc(t('reminders'))}</b><div class="muted">${esc(t('reminderHelp'))}</div></div><input id="reminder-toggle" type="checkbox" ${state.remindersEnabled ? 'checked' : ''}></div>
+        <p class="muted">${esc(t('timezone'))}: ${esc(state.timezone)}</p>
+      </section>`;
+    }
+
+    async function hydratePhotos(root) {
+      for (const image of root.querySelectorAll('img[data-photo]')) {
+        const pathname = image.dataset.photo;
+        try {
+          const response = await fetch(`/api/photos?path=${encodeURIComponent(pathname)}`, {
+            headers: { 'X-Telegram-Init-Data': initData },
+            cache: 'force-cache'
+          });
+          if (!response.ok) throw new Error(t('loadError'));
+          const url = URL.createObjectURL(await response.blob());
+          state.imageUrls.push(url);
+          image.src = url;
+        } catch {
+          image.alt = t('emptyPhoto');
+        }
+      }
+    }
+
+    function render() {
+      saveObjectUrls();
+      appTabs();
+      if (state.tab === 'history') renderHistory();
+      else if (state.tab === 'greenhouse') renderGreenhouse();
+      else if (state.tab === 'settings') renderSettings();
+      else renderAnalyze();
+    }
+
+    async function loadHistory(offset) {
+      let requestedOffset = Math.max(0, Math.floor(Number(offset) || 0));
+      let data = await api(`/api/miniapp?offset=${requestedOffset}&limit=20`);
+      const lastOffset = Math.floor(Math.max(0, (Number(data.totalHistory) || 0) - 1) / 20) * 20;
+      if (requestedOffset > lastOffset) {
+        requestedOffset = lastOffset;
+        data = await api(`/api/miniapp?offset=${requestedOffset}&limit=20`);
+      }
+      state.history = data.history || [];
+      state.total = Number(data.totalHistory) || 0;
+      state.offset = requestedOffset;
+    }
+
+    async function compressPhoto(file) {
+      const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext('2d');
+      context.fillStyle = '#fff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      return canvas.toDataURL('image/jpeg', 0.84);
+    }
+
+    async function analyze(file) {
+      if (state.busy) return;
+      state.busy = true;
+      const button = document.getElementById('analyze-button');
+      button.disabled = true;
+      button.textContent = t('analyzing');
+      showNotice('', false);
+      try {
+        const image = await compressPhoto(file);
+        const data = await api('/api/miniapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'analyze', image })
+        });
+        const result = document.getElementById('result');
+        result.innerHTML = analysisCard(data.analysis, false);
+        hydratePhotos(result);
+        await loadHistory(0);
+      } catch (error) {
+        showNotice(error.message || t('error'), true);
+      } finally {
+        state.busy = false;
+        button.disabled = false;
+        button.textContent = t('analyzeNow');
+      }
+    }
+
+    async function changeSettings(values) {
+      const data = await api('/api/miniapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'settings', ...values })
+      });
+      Object.assign(state, data.settings || {});
+      showNotice(t('saved'), false);
+      render();
+    }
+
+    async function handleClick(event) {
+      const tabButton = event.target.closest('[data-tab]');
+      if (tabButton) {
+        state.tab = tabButton.dataset.tab;
+        showNotice('', false);
+        if (state.tab === 'history') await loadHistory(0);
+        if (state.tab === 'greenhouse') await loadData();
+        render();
+        return;
+      }
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+      const action = button.dataset.action;
+      if (action === 'next-page' || action === 'prev-page') {
+        const nextOffset = action === 'next-page' ? state.offset + state.history.length : Math.max(0, state.offset - 20);
+        await loadHistory(nextOffset);
+        render();
+        return;
+      }
+      button.disabled = true;
+      try {
+        const data = await api('/api/miniapp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: action === 'add' ? 'add-to-greenhouse' : action === 'delete' ? 'delete-history' : action, id: button.dataset.id })
+        });
+        if (action === 'water') state.greenhouse = data.greenhouse || [];
+        if (action === 'delete') await loadHistory(state.offset);
+        if (action === 'add') {
+          state.greenhouse = data.greenhouse || [];
+          showNotice(data.alreadyAdded ? t('alreadyAdded') : t('saved'), false);
+        }
+        render();
+      } catch (error) {
+        showNotice(error.message || t('error'), true);
+        button.disabled = false;
+      }
+    }
+
+    async function loadData() {
+      const data = await api('/api/miniapp?offset=0&limit=20');
+      state.history = data.history || [];
+      state.total = Number(data.totalHistory) || 0;
+      state.greenhouse = data.greenhouse || [];
+      Object.assign(state, data.settings || {});
+      if (data.user && data.user.firstName) document.getElementById('user-name').textContent = data.user.firstName;
+    }
+
+    document.addEventListener('click', event => { handleClick(event).catch(error => showNotice(error.message || t('error'), true)); });
+    document.addEventListener('change', event => {
+      if (event.target.id === 'photo-input' && event.target.files && event.target.files[0]) {
+        const button = document.getElementById('analyze-button');
+        button.disabled = false;
+        button.onclick = () => analyze(event.target.files[0]);
+      }
+      if (event.target.id === 'language-select') {
+        changeSettings({ language: event.target.value, timezone: state.timezone, remindersEnabled: state.remindersEnabled })
+          .catch(error => showNotice(error.message || t('error'), true));
+      }
+      if (event.target.id === 'reminder-toggle') {
+        changeSettings({ language: state.language, timezone: state.timezone, remindersEnabled: event.target.checked })
+          .catch(error => showNotice(error.message || t('error'), true));
+      }
+    });
+
+    async function start() {
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        if (tg.themeParams) {
+          const themeKeys = {
+            bg_color: '--tg-theme-bg-color',
+            section_bg_color: '--tg-theme-section-bg-color',
+            text_color: '--tg-theme-text-color',
+            hint_color: '--tg-theme-hint-color',
+            button_color: '--tg-theme-button-color',
+            button_text_color: '--tg-theme-button-text-color'
+          };
+          Object.entries(themeKeys).forEach(([key, variable]) => {
+            if (tg.themeParams[key]) document.documentElement.style.setProperty(variable, tg.themeParams[key]);
+          });
+        }
+      }
+      if (!initData) {
+        content.innerHTML = `<div class="card empty">${esc(t('openInTelegram'))}</div>`;
+        document.getElementById('tabs').hidden = true;
+        return;
+      }
+      try {
+        const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        state.timezone = detectedTimezone;
+        await loadData();
+        await changeSettings({
+          language: state.language,
+          timezone: detectedTimezone,
+          remindersEnabled: state.remindersEnabled
+        });
+        showNotice('', false);
+        render();
+      } catch (error) {
+        content.innerHTML = `<div class="card empty">${esc(error.message || t('error'))}</div>`;
+      }
+    }
+
+    start();
+  </script>
+</body>
+</html>
