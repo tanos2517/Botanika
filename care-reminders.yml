@@ -1,0 +1,26 @@
+name: Botanika care reminders
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Trigger reminder scheduler
+        env:
+          BOTANIKA_APP_URL: ${{ secrets.BOTANIKA_APP_URL }}
+          SCHEDULER_SECRET: ${{ secrets.SCHEDULER_SECRET }}
+        run: |
+          if [ -z "$BOTANIKA_APP_URL" ] || [ -z "$SCHEDULER_SECRET" ]; then
+            echo "Set BOTANIKA_APP_URL and SCHEDULER_SECRET in repository Actions secrets."
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error --max-time 90 \
+            -X POST "${BOTANIKA_APP_URL%/}/api/reminders" \
+            -H "Authorization: Bearer ${SCHEDULER_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data '{}'
