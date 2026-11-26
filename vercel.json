@@ -1,0 +1,39 @@
+{
+  "functions": {
+    "api/telegram.js": {
+      "maxDuration": 60
+    },
+    "api/miniapp.js": {
+      "maxDuration": 60
+    },
+    "api/photos.js": {
+      "maxDuration": 30
+    },
+    "api/reminders.js": {
+      "maxDuration": 30
+    },
+    "api/sync.js": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/telegram-miniapp.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ]
+}
